@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizador StayRED PRO</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body { font-family: 'Calibri', sans-serif; background-color: #BB1010; display: flex; justify-content: center; padding: 20px; color: #333; }
+        .container { background-color: #f0f0f0; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); max-width: 950px; width: 100%; }
+        h2 { text-align: center; color: #BB1010; margin-top: 0; border-bottom: 2px solid #BB1010; padding-bottom: 10px; }
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        fieldset { border: 1px solid #ccc; border-radius: 5px; margin-bottom: 15px; padding: 10px; background: white; }
+        legend { font-weight: bold; color: #BB1010; padding: 0 5px; }
+        .form-group { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        input, select { padding: 6px; width: 160px; text-align: right; border: 1px solid #ccc; border-radius: 4px; }
+        .readonly-box { background-color: #eee; border: 1px solid #bbb; padding: 6px; width: 160px; text-align: right; font-weight: bold; display: inline-block; border-radius: 4px; }
+        
+        .buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        button { padding: 12px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { opacity: 0.8; }
+        .btn-calc { background-color: #1E8449; grid-column: span 2; font-size: 1.1em; }
+        .btn-clear { background-color: #333; }
+        .btn-pdf { background-color: #FF5733; }
+        .btn-mail { background-color: #007BFF; grid-column: span 2; }
+
+        .total-box { grid-column: span 2; background-color: #fff; padding: 15px; border: 2px solid #BB1010; border-radius: 5px; margin-top: 10px; }
+        
+        #resumen-pdf { padding: 40px; color: black; background: white; display: none; }
+        .pdf-header { border-bottom: 2px solid #BB1010; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Cotizador Ricale Academy - StayRED PRO - v.Mar26</h2>
+
+    <div class="grid-layout">
+        <div class="col">
+            <fieldset>
+                <legend>Tipo de Viaje y Forma de Pago</legend>
+                <div class="form-group">
+                    <label>Tipo de Destino:</label>
+                    <select id="srv_dest">
+                        <option value="">Seleccione...</option>
+                        <option value="Cabotaje">Dentro de Argentina</option>
+                        <option value="Internacional">Internacional</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Moneda de Pago:</label>
+                    <select id="pay_curr">
+                        <option value="">Seleccione...</option>
+                        <option value="Dólares">Dólares</option>
+                        <option value="Pesos">Pesos</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Método de Pago:</label>
+                    <select id="pay_tipe">
+                        <option value="">Seleccione...</option>
+                        <option value="Deposito">Depósito</option>
+                        <option value="Tarjeta">Tarjeta de Crédito</option>
+                        <option value="Transferencia">Transferencia</option>
+                    </select>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Datos del Producto (StayRED)</legend>
+                <div class="form-group"><label>Moneda StayRED:</label>
+                    <select id="stayred_curr">
+                        <option value="">Seleccione...</option>
+                        <option value="Dólares">Dólares</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Precio Base StayRED:</label><input type="number" id="stayred_fare" value="0.00"></div>
+                <div class="form-group"><label>Tipo de Cambio:</label><input type="number" id="stayred_tdc" value="0.00"></div>
+                <div class="form-group"><label>Fee Adicional Promotor:</label><input type="number" id="srv_fee" value="0.00"></div>
+            </fieldset>
+        </div>
+
+        <div class="col">
+            <fieldset>
+                <legend>Datos del Cliente</legend>
+                <div class="form-group"><label>ID Cliente:</label><input type="text" id="client_info"></div>
+                <div class="form-group"><label>CUIT/CUIL:</label><input type="text" id="client_cuit"></div>
+                <div class="form-group"><label>Reserva (PNR):</label><input type="text" id="client_pnr"></div>
+            </fieldset>
+
+            <div class="buttons">
+                <button class="btn-calc" onclick="calcular()">Calcular</button>
+                <button class="btn-pdf" onclick="descargarPDF()">Descargar PDF</button>
+                <button class="btn-clear" onclick="limpiar()">Limpiar</button>
+                <button class="btn-mail" onclick="enviarEmail()">Enviar Cotización por Mail</button>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <div class="form-group"><label>Tarifa sin Impuestos:</label><span id="out_fare" class="readonly-box">0.00</span></div>
+                <div class="form-group"><label>Impuestos:</label><span id="out_tax" class="readonly-box">0.00</span></div>
+                <div class="form-group"><label>Costo del Producto:</label><span id="out_cost" class="readonly-box">0.00</span></div>
+            </div>
+        </div>
+
+        <div class="total-box">
+            <div class="form-group">
+                <label style="font-size: 1.2em; font-weight: bold;">Importe Final a Facturar al Cliente:</label>
+                <span id="out_sale_info" class="readonly-box" style="font-size: 1.2em; width: 200px; color: #BB1010;">0.00</span>
+            </div>
+            <div class="form-group">
+                <label>Rentabilidad Total a Cobrar Neta de Impuestos:</label>
+                <span id="out_rent_final" class="readonly-box" style="width: 200px;">0.00</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="resumen-pdf">
+    <div class="pdf-header">
+        <h1>Resumen de Cotización Terrestre - StayRED</h1>
+        <p>Generado por Ricale Academy</p>
+    </div>
+    <div id="pdf-content"></div>
+</div>
+
+<script>
+    // Coeficientes StayRED
+    const RG_3819 = 0.30, IVA = 0.21, MUP_RICALE = 0.80, COMI_RICALE = 0.20;
+    const COMI_PROM_ACADEMY = 0.10, TRF_CHARGE = 0.012, RG_4815 = 0.05;
+    
+    let datosCoti = {};
+
+    function calcular() {
+        const d = {
+            dest: document.getElementById('srv_dest').value,
+            pCurr: document.getElementById('pay_curr').value,
+            pTipe: document.getElementById('pay_tipe').value,
+            fare: parseFloat(document.getElementById('stayred_fare').value) || 0,
+            tdc: parseFloat(document.getElementById('stayred_tdc').value) || 0,
+            sfee: parseFloat(document.getElementById('srv_fee').value) || 0,
+            cli: document.getElementById('client_info').value,
+            pnr: document.getElementById('client_pnr').value
+        };
+
+        // Validaciones del código original
+        if (!d.dest || !d.pCurr || !d.pTipe || d.fare === 0) { alert("Todos los campos son obligatorios."); return; }
+        if (d.pTipe === "Tarjeta" && d.pCurr === "Dólares") { alert("No habilitado pago en Dólares con Tarjeta."); return; }
+        if (d.pTipe === "Tarjeta" && d.dest === "Internacional") { alert("Consultar pagos al exterior con tarjeta a comercial@ricale.com"); }
+        if (d.dest === "Cabotaje" && d.pCurr === "Dólares") { alert("Servicios en Argentina deben pagarse en Pesos."); return; }
+        if (d.pCurr === "Pesos" && d.tdc === 0) { alert("Ingrese el Tipo de Cambio StayRED."); return; }
+
+        let prod_fare, prod_tax;
+
+        // Lógica de Impuestos StayRED
+        if (d.dest === "Cabotaje" && d.pCurr === "Pesos") {
+            prod_fare = (d.fare / (1 + IVA)) * d.tdc;
+            prod_tax = prod_fare * IVA;
+        } else if (d.dest === "Internacional" && d.pCurr === "Pesos") {
+            prod_fare = d.fare * d.tdc;
+            prod_tax = ((prod_fare * COMI_RICALE) * IVA) + ((prod_fare * MUP_RICALE) * RG_3819);
+        } else { // Dólares Internacional
+            prod_fare = d.fare;
+            prod_tax = (prod_fare * COMI_RICALE) * IVA;
+        }
+
+        const prod_cost = prod_fare + prod_tax;
+        const val_prod = prod_cost + d.sfee;
+        const prod_comi = prod_fare * COMI_PROM_ACADEMY;
+        const rent_final = prod_comi + (d.sfee / 1.21);
+
+        let sale_info = 0;
+        if (d.pTipe === "Transferencia" || (d.pTipe === "Deposito" && d.dest === "Cabotaje")) {
+            sale_info = val_prod * (1 + TRF_CHARGE);
+        } else if (d.pTipe === "Deposito" && d.dest === "Internacional") {
+            let val_rg_4815 = (prod_fare * MUP_RICALE) * RG_4815;
+            sale_info = (val_prod + val_rg_4815) * (1 + TRF_CHARGE);
+        } else {
+            sale_info = val_prod; 
+        }
+
+        // Actualizar Interfaz
+        document.getElementById('out_fare').innerText = prod_fare.toFixed(2);
+        document.getElementById('out_tax').innerText = prod_tax.toFixed(2);
+        document.getElementById('out_cost').innerText = prod_cost.toFixed(2);
+        document.getElementById('out_sale_info').innerText = sale_info.toFixed(2);
+        document.getElementById('out_rent_final').innerText = rent_final.toFixed(2);
+
+        datosCoti = {...d, prod_fare, prod_tax, sale_info, rent_final, gastos: (sale_info - val_prod).toFixed(2)};
+    }
+
+    function descargarPDF() {
+        if (!datosCoti.sale_info) { alert("Primero calcule la cotización."); return; }
+        const content = `
+            <h3>Datos del Cliente</h3>
+            <p>ID: ${datosCoti.cli} | Reserva: ${datosCoti.pnr}</p>
+            <hr>
+            <h3>Detalle de Importes (${datosCoti.pCurr})</h3>
+            <p>Tarifa Base: ${datosCoti.prod_fare.toFixed(2)}</p>
+            <p>Impuestos y Percepciones: ${datosCoti.prod_tax.toFixed(2)}</p>
+            <p>Fee Adicional: ${datosCoti.sfee.toFixed(2)}</p>
+            <p>Gastos por ${datosCoti.pTipe}: ${datosCoti.gastos}</p>
+            <h2 style="color: #BB1010">PRECIO FINAL: ${datosCoti.sale_info.toFixed(2)} ${datosCoti.pCurr}</h2>
+        `;
+        const element = document.getElementById('resumen-pdf');
+        document.getElementById('pdf-content').innerHTML = content;
+        element.style.display = 'block';
+        html2pdf().from(element).set({
+            margin: 1, filename: `StayRED_${datosCoti.pnr || 'Coti'}.pdf`,
+            html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        }).save().then(() => { element.style.display = 'none'; });
+    }
+
+    function enviarEmail() {
+        if (!datosCoti.sale_info) { alert("Calcule la cotización primero."); return; }
+        const asunto = encodeURIComponent(`Cotización StayRED - Reserva ${datosCoti.pnr}`);
+        const cuerpo = encodeURIComponent(
+            `Detalles de la cotización terrestre:\n` +
+            `- Cliente: ${datosCoti.cli}\n- Reserva: ${datosCoti.pnr}\n` +
+            `- Destino: ${datosCoti.dest}\n- Pago: ${datosCoti.pTipe}\n` +
+            `-----------------------------------\n` +
+            `PRECIO FINAL: ${datosCoti.sale_info.toFixed(2)} ${datosCoti.pCurr}\n` +
+            `-----------------------------------`
+        );
+        window.location.href = `mailto:?subject=${asunto}&body=${cuerpo}`;
+    }
+
+    function limpiar() { location.reload(); }
+</script>
+</body>
+</html>

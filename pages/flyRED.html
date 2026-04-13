@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizador FlyRED - Ricale Academy - v.Mar26 Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <style>
+        body { font-family: 'Calibri', sans-serif; background-color: #BB1010; display: flex; justify-content: center; padding: 20px; color: #333; }
+        .container { background-color: #f0f0f0; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); max-width: 950px; width: 100%; }
+        h2 { text-align: center; color: #BB1010; margin-top: 0; border-bottom: 2px solid #BB1010; padding-bottom: 10px; }
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        fieldset { border: 1px solid #ccc; border-radius: 5px; margin-bottom: 15px; padding: 10px; background: white; }
+        legend { font-weight: bold; color: #BB1010; padding: 0 5px; }
+        .form-group { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        input, select { padding: 6px; width: 160px; text-align: right; border: 1px solid #ccc; border-radius: 4px; }
+        .readonly-box { background-color: #eee; border: 1px solid #bbb; padding: 6px; width: 160px; text-align: right; font-weight: bold; display: inline-block; border-radius: 4px; }
+        .readonly-box_pTipe { background-color: #eee; border: 1px solid #bbb; padding: 6px; width: 140px; text-align: left; font-weight: bold; display: inline-block; border-radius: 4px; }
+        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button {-webkit-appearance: none;margin: 0;} /* Ocultar flechas en chrome */
+        input[type="number"] { appearance: none;-moz-appearance: textfield;}/* Ocultar flechas en Firefox */
+        .buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 30px; }
+        button { padding: 12px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { opacity: 0.8; }
+        .btn-calc { background-color: #1E8449; grid-column: span 2; font-size: 1.1em; }
+        .btn-clear { background-color: #333; }
+        .btn-pdf { background-color: #FF5733; }
+        .btn-mail { background-color: #007BFF; grid-column: span 2; }
+        .total-box { grid-column: span 2; background-color: #fff; padding: 15px; border: 2px solid #BB1010; border-radius: 5px; margin-top: 1px; }
+        
+        /* Estilo para el área del PDF (Oculta en la web, visible en el archivo) */
+        #resumen-pdf { padding: 10px; color: black; background: white; display: none; }
+        .pdf-header { border-bottom: 2px solid #BB1010; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Cotizador FlyRED - Ricale Academy - v.Mar26 Pro </h2>
+
+    <div class="grid-layout">
+        <div class="col">
+            <fieldset>
+                <legend>Tipo de Viaje y Forma de Pago</legend>
+                <div class="form-group">
+                    <label>Tipo de Destino:</label>
+                    <select id="srv_dest">
+                        <option value="">Seleccione...</option>
+                        <option value="cabotaje">Dentro de Argentina</option>
+                        <option value="internacional">Internacional</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Moneda de Pago:</label>
+                    <select id="pay_curr">
+                        <option value="">Seleccione...</option>
+                        <option value="Dólares">Dólares</option>
+                        <option value="Pesos">Pesos</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Método de Pago:</label>
+                    <select id="pay_tipe">
+                        <option value="">Seleccione...</option>
+                        <option value="Depósito">Depósito</option>
+                        <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
+                        <option value="Transferencia">Transferencia</option>
+                    </select>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Datos del Producto (FlyRED)</legend>
+                <div class="form-group"><label>Moneda Cotización:</label>
+                    <select id="flyred_curr">
+                        <option value="">Seleccione...</option>
+                        <option value="Dólares">Dólares</option>
+                        <option value="Pesos">Pesos</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Tarifa SIN Impuestos:</label><input type="number" id="flyred_fare" value="0" min="0"></div>
+                <div class="form-group"><label>Impuestos:</label><input type="number" id="flyred_tax" value="0" min="0"></div>
+                <div class="form-group"><label>Fee Ricale:</label><input type="number" id="flyred_issuefee" value="0" min="0"></div>
+                <div class="form-group"><label>Comisión Promotor (Importe):</label><input type="number" id="flyred_comi" value="0" min="0"></div>
+                <div class="form-group"><label>Over Promotor (Importe):</label><input type="number" id="flyred_over" value="0" min="0"></div>
+                <div class="form-group"><label>Fee Adicional Promotor:</label><input type="number" id="srv_fee" value="0" min="0"></div>
+            </fieldset>
+        </div>
+
+        <div class="col">
+            <fieldset>
+                <legend>Datos del Cliente</legend>
+                <div class="form-group"><label>ID Cliente:</label><input type="number" id="client_info" value="0" min="0"></div>
+                <div class="form-group"><label>CUIT/CUIL:</label><input type="number" id="client_cuit" value="0" min="0"></div>
+                <div class="form-group"><label>PNR o Detalle Itinerario:</label><input type="text" id="client_pnr" value="_"></div>
+            </fieldset>
+
+            <div class="buttons">
+                <button class="btn-calc" onclick="calcular()">Calcular</button>
+                <button class="btn-pdf" onclick="descargarPDF()">Descargar PDF</button>
+                <button class="btn-clear" onclick="limpiar()">Limpiar</button>
+                <button class="btn-mail" onclick="enviarEmail()">Enviar Cotización por Mail</button>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <fieldset>
+                    <div class="form-group"><label>Costo Total Producto (FlyRED):</label><span id="out_cost" class="readonly-box">0.00</span></div>
+                    <div class="form-group"><label>Utilidad Total Producto (FlyRED):</label><span id="out_revn" class="readonly-box">0.00</span></div>
+                </fieldset>
+            </div>
+        </div>
+
+        <div class="total-box">
+            <div class="form-group"><label>Total Producto incluido Fee Adicional Promotor:</label><span id="out_val_prod" class="readonly-box" style="width: 200px">0.00</span></div>
+            <div class="form-group"><label>Gastos por Forma de Pago <span id = "out_pTipe" style="font-size: 1.em"  class="readonly-box_pTipe" >__</span>:</label><span id="out_gastos" class="readonly-box" style="width: 200px">0.00</span></div>
+            <div class="form-group">
+                <label style="font-size: 1.2em; font-weight: bold">Importe Final a Facturar al Cliente:</label>
+                <span id="out_sale_info" class="readonly-box" style="font-size: 1.2em; width: 200px; color: #BB1010">0.00</span>
+            </div>
+            <div class="form-group">
+                <label>Rentabilidad Total a Cobrar Neta de Impuestos:</label>
+                <span id="out_rent_final" class="readonly-box" style="font-size: 1.2em; width: 200px; color: #1E8449">0.00</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="resumen-pdf">
+    <div class="pdf-header">
+        <h1>Resumen de Cotización - FlyRED</h1>
+        <p>Generado automáticamente por Cotizador Ricale Academy - FlyRED - v.Mar26 Pro</p>
+    </div>
+    <div id="pdf-content"></div>
+</div>
+
+<script>
+    const trf_charge = 0.012, tc_charge = 0.072, rg_afip_4815 = 0.05;
+    let datosUltimaCoti = {};
+
+    function calcular() {
+        const d = {
+            dest: document.getElementById('srv_dest').value,
+            pCurr: document.getElementById('pay_curr').value,
+            pTipe: document.getElementById('pay_tipe').value,
+            fCurr: document.getElementById('flyred_curr').value,
+            fare: parseFloat(document.getElementById('flyred_fare').value),
+            tax:  parseFloat(document.getElementById('flyred_tax').value),
+            ifee: parseFloat(document.getElementById('flyred_issuefee').value) || 0,
+            comi: parseFloat(document.getElementById('flyred_comi').value) || 0,
+            over: parseFloat(document.getElementById('flyred_over').value) || 0,
+            sfee: parseFloat(document.getElementById('srv_fee').value) || 0,
+            cli: document.getElementById('client_info').value,
+            pnr: document.getElementById('client_pnr').value
+        };
+        
+        const cost = d.fare + d.tax + d.ifee;
+        const revn = d.comi + d.over;
+        const val_prod = cost + d.sfee;
+        const rent_final = revn + (d.sfee / 1.21);
+
+
+        if (!d.dest || !d.pCurr || !d.pTipe || !d.fCurr || !cost ) { swal("Datos Incompletos","Por favor, complete todos los datos para poder avanzar con la cotización.", "warning"); return; }
+        if (d.dest === "cabotaje" && d.pCurr === "Dólares") { swal("Moneda de Pago Incorrecta", "Por el momento NO es posible emitir vuelos de Cabotaje en Dólares.", "error"); return; }
+        if (d.pCurr === "Dólares" && d.pTipe ==="Tarjeta de Crédito") { swal("Forma de Pago Inválida", "Por regulaciones del BCRA no se pueden procesar pagos en Dólares con Tarjeta de Crédito para el mercado Argentino por el momento.", "info"); return; }
+        if (d.pCurr !== d.fCurr) { swal("Ooops!","La moneda de cotización no coincide con la moneda de pago.", "error"); return; }
+        if (d.fare<0 || d.tax<0 || d.ifee<0 || d.comi<0 || d.over<0 || d.sfee<0) {swal("Psst. Por favor,","Verificá que todos los valores deben ser mayores o igual a cero","warning"); return;}
+       
+        let sale_info = 0;
+        let uatp = 0;
+        let posnet = 0;
+        if (d.pTipe === "Transferencia") sale_info = val_prod / (1 - trf_charge);
+        else if (d.pTipe === "Depósito" && d.dest === "internacional") {
+            let val_rg = d.fare * rg_afip_4815;
+            sale_info = (val_prod + val_rg) / (1 - trf_charge);
+        } else if (d.pTipe === "Tarjeta de Crédito") {
+            uatp = d.fare + d.tax;
+            posnet = (d.ifee + d.sfee) / (1 - tc_charge);
+            sale_info = uatp + posnet;
+            swal("split de pagos",`Importe UATP: $${uatp.toFixed(2)} - Importe POSNET: $${posnet.toFixed(2)}`,"success");
+        } else sale_info = val_prod;
+
+        const gastos = sale_info - val_prod;
+
+        document.getElementById('out_cost').innerText = cost.toFixed(2);
+        document.getElementById('out_revn').innerText = revn.toFixed(2);
+        document.getElementById('out_val_prod').innerText = val_prod.toFixed(2);
+        document.getElementById('out_pTipe').innerText = d.pTipe;
+        document.getElementById('out_gastos').innerText = gastos.toFixed(2);
+        document.getElementById('out_sale_info').innerText = sale_info.toFixed(2);
+        document.getElementById('out_rent_final').innerText = rent_final.toFixed(2);
+        
+        datosUltimaCoti = {...d, cost, revn, sale_info, rent_final, gastos, val_prod, uatp, posnet};
+
+        
+        if (!rent_final) {swal("Por favor, Verifica los Datos", "Esta cotización no registra rentabilidad", "warning" );return;}
+    }
+
+    function descargarPDF() {
+        if (!datosUltimaCoti.sale_info) { swal("Ooops","Para descargar el PDF primero debes realizar una cotización.","warning" ); return; }
+        
+        const content = `
+            <h2>Cotización Aérea - Itinerario/PNR ${datosUltimaCoti.pnr}</h2>
+            <hr>
+            <h3>Datos del Cliente</h3>
+            <p>ID_Cliente: ${datosUltimaCoti.cli}</p>
+            <p>PNR o Detalle Itinerario: ${datosUltimaCoti.pnr}</p>
+            <hr>
+            <h3>Detalle de la cotización</h3>
+            <p>Forma de Pago: ${datosUltimaCoti.pTipe}</p>
+            <p>Moneda ${datosUltimaCoti.pCurr}<p>
+            <p>Tarifa: ${datosUltimaCoti.fare.toFixed(2)} <p>    
+            <p>Impuestos: ${datosUltimaCoti.tax.toFixed(2)}</p>
+            <p>Fee Ricale: ${datosUltimaCoti.ifee.toFixed(2)}</p>
+            <p>Fee Adicional Promotor: ${datosUltimaCoti.sfee.toFixed(2)}</p>
+            <p>Gastos por Forma de Pago: [${datosUltimaCoti.pTipe}]  ${datosUltimaCoti.gastos.toFixed(2)}</p>
+            <h3 style="color: #BB1010">Importe Final a Facturar al Cliente: ${datosUltimaCoti.pCurr} ${datosUltimaCoti.sale_info.toFixed(2)} </h3>
+            <h3 style="color: #BB1010">Rentabilidad Total a Cobrar Neta de Impuestos: ${datosUltimaCoti.pCurr} ${datosUltimaCoti.rent_final.toFixed(2)} </h3>
+        `;
+        
+        const element = document.getElementById('resumen-pdf');
+        document.getElementById('pdf-content').innerHTML = content;
+        element.style.display = 'block';
+        
+        html2pdf().from(element).set({
+            margin: 1,
+            filename: `Cotizacion_${datosUltimaCoti.pnr || 'FlyRED'}.pdf`,
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        }).save().then(() => { element.style.display = 'none'; });
+    }
+
+    function enviarEmail() {
+        if (!datosUltimaCoti.sale_info) { swal("Ooops","Para enviar el mail primero debes realizar una cotización.","warning" ); return; }
+        
+        const asunto = encodeURIComponent(`Cotización Aérea - Itinerario/PNR ${datosUltimaCoti.pnr}`);
+        const cuerpo = encodeURIComponent(
+            `Hola,\nEnvio detalles de la cotización:\n` +
+            `- ID_Cliente: ${datosUltimaCoti.cli}\n` +
+            `- PNR o Detalle Itinerario: ${datosUltimaCoti.pnr}\n` +
+            `-----------------------------------------------------------------------------\n` +
+            `- Forma de Pago: ${datosUltimaCoti.pTipe}\n` +
+            `- Moneda: ${datosUltimaCoti.pCurr}\n` +
+            `- Tarifa: ${datosUltimaCoti.fare.toFixed(2)}\n` +    
+            `- Impuestos: ${datosUltimaCoti.tax.toFixed(2)}\n` +
+            `- Fee Ricale: ${datosUltimaCoti.ifee.toFixed(2)}\n` +
+            `- Fee Adicional Promotor: ${datosUltimaCoti.sfee.toFixed(2)}\n` +
+            `- Gastos por Forma de Pago [${datosUltimaCoti.pTipe}]: ${datosUltimaCoti.gastos.toFixed(2)}\n` +
+            `-----------------------------------------------------------------------------\n` +
+            `- Importe Final a Facturar al Cliente: ${datosUltimaCoti.pCurr} ${datosUltimaCoti.sale_info.toFixed(2)}\n` +
+            `- Rentabilidad Total a Cobrar Neta de Impuestos: ${datosUltimaCoti.pCurr} ${datosUltimaCoti.rent_final.toFixed(2)}\n` + 
+            `-----------------------------------------------------------------------------\n` +
+            `-   \n` +
+            `-\nSaludos.`
+        );
+        
+        window.location.href = `mailto:?subject=${asunto}&body=${cuerpo}`;
+    }
+
+    function limpiar() { location.reload(); }
+</script>
+
+</body>
+</html>
