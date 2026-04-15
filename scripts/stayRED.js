@@ -118,15 +118,15 @@ function enviarEmail() {
     const asunto = encodeURIComponent(`Cotización StayRED - Reserva ${datosCoti.pnr}`);
     const cuerpo = encodeURIComponent(
         `Hola,\nEnvio detalles de la cotización terrestre:\n` +
-        `- Reserva / Localizador: ${datosCoti.pnr}\n` +
+        `- Detalle Reserva - Localizador: ${datosCoti.pnr}\n` +
         `- ID_Cliente: ${datosCoti.cli} - CUIT: ${datosCoti.cuit}\n` +
         `-----------------------------------------------------------------------------\n` +
         `- Forma de Pago: ${datosCoti.pTipe}\n` +
         `- Moneda: ${datosCoti.pCurr}\n` +
-        `- Tarifa: ${datosCoti.fare.toFixed(2)}\n` +    
-        `- Impuestos: ${datosCoti.tax.toFixed(2)}\n` +
+        `- Tarifa: ${datosCoti.prod_fare.toFixed(2)}\n` +    
+        `- Impuestos: ${datosCoti.prod_tax.toFixed(2)}\n` +
         `- Fee Adicional Promotor: ${datosCoti.new_sfee.toFixed(2)}\n` +
-        `- Gastos por Forma de Pago [${datosCoti.pTipe}]: ${datosCoti.gastos.toFixed(2)}\n` +
+        `- Gastos por ${datosCoti.pTipe}: ${datosCoti.gastos.toFixed(2)}\n` +
         `-----------------------------------------------------------------------------\n` +
         `- Importe Final a Facturar al Cliente: ${datosCoti.pCurr} ${datosCoti.sale_info.toFixed(2)}\n` +
         `- Rentabilidad Total a Cobrar Neta de Impuestos: ${datosCoti.pCurr} ${datosCoti.rent_final.toFixed(2)}\n` + 
