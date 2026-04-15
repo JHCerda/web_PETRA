@@ -1,6 +1,17 @@
 const rg_3819 = 0.30, iva = 0.21, mup_Ricale = 0.80, comi_Ricale = 0.20;
 const comi_Prom = 0.10, trf_charge = 0.012, rg_4815 = 0.05;
 
+// Detectamos la moneda seleccionada en el formulario
+//const monedaSeleccionada = document.getElementById('pay_curr').value === 'Pesos' ? 'ARS' : 'USD';
+
+// Función para formatear moneda
+function formatCurrency(valor, moneda) {
+    return new Intl.NumberFormat('es-AR', {
+        style: 'currency',
+        currency: moneda,
+    }).format(valor);
+}
+
 let datosCoti = {};
 
 function calcular() {
@@ -65,14 +76,14 @@ function calcular() {
     // Actualizar Interfaz
     document.getElementById('out_pCurr').innerText = d.pCurr;
     document.getElementById('out_pTipe').innerText = d.pTipe;
-    document.getElementById('out_fare').innerText = prod_fare.toFixed(2);
-    document.getElementById('out_tax').innerText = prod_tax.toFixed(2);
-    document.getElementById('out_cost').innerText = prod_cost.toFixed(2);
-    document.getElementById('out_comi').innerText = prod_comi.toFixed(2);
-    document.getElementById('out_val_prod').innerText = val_prod.toFixed(2);
-    document.getElementById('out_sale_info').innerText = sale_info.toFixed(2);
-    document.getElementById('out_rent_final').innerText = rent_final.toFixed(2);
-    document.getElementById('out_gastos').innerText = gastos.toFixed(2);
+    document.getElementById('out_fare').innerText = formatCurrency(prod_fare, monedaSeleccionada);
+    document.getElementById('out_tax').innerText = formatCurrency(prod_tax,"ARS");
+    document.getElementById('out_cost').innerText = formatCurrency(prod_cost,"ARS");
+    document.getElementById('out_comi').innerText = formatCurrency(prod_comi,"ARS");
+    document.getElementById('out_val_prod').innerText = formatCurrency(val_prod,"ARS");
+    document.getElementById('out_sale_info').innerText = formatCurrency(sale_info,"ARS");
+    document.getElementById('out_rent_final').innerText = formatCurrency(rent_final,"ARS");
+    document.getElementById('out_gastos').innerText = formatCurrency(gastos,"ARS");
 
     datosCoti = {...d, new_sfee, prod_fare, prod_tax, prod_cost, prod_comi, val_prod, sale_info, rent_final, gastos};
     
